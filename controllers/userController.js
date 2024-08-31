@@ -2,24 +2,22 @@ const userService = require('../services/userServices');
 
 
 exports.register = async (req, res) => {
-    try{
+    try {
         const result = await userService.registerUser(req.body);
         res.status(201).json(result);
     } catch (err) {
-        res.status(500).json({error: err.message});
+        res.status(400).json({ error: err.message });
     }
 };
 
-
 exports.login = async (req, res) => {
-    try{
+    try {
         const result = await userService.loginUser(req.body);
         res.status(200).json(result);
     } catch (err) {
-        res.status(400).json({error: err.message});
+        res.status(400).json({ error: err.message });
     }
 };
-
 
 exports.getAllUsers = async (req, res) => {
     try {
@@ -32,9 +30,9 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
     try {
-        const result = await userService.getUserById(req.params.id);
-        res.status(200).json(result);
+        const user = await userService.getUserById(req.params.id);
+        res.status(200).json(user);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(404).json({ error: err.message });
     }
 };
