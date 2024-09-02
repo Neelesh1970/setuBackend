@@ -6,20 +6,31 @@ const pool = require('../config/db');
 exports.registerUser = async (userData) => {
     const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword } = userData;
 
+    // Collect missing fields
+    let missingFields = [];
+    
+    if (!firstName) missingFields.push('First Name');
+    if (!lastName) missingFields.push('Last Name');
+    if (!dob) missingFields.push('Date of Birth');
+    if (!gender) missingFields.push('Gender');
+    if (!phoneNumber) missingFields.push('Phone Number');
+    if (!email) missingFields.push('Email');
+    if (!password) missingFields.push('Password');
+    if (!confirmPassword) missingFields.push('Confirm Password');
 
-    if (!firstName || !lastName || !dob || !gender || !phoneNumber || !email || !password || !confirmPassword) {
-        throw new Error('Please fill out all mandatory fields');
+    if (missingFields.length > 0) {
+        throw new Error(`This field is required: ${missingFields.join(', ')}`);
     }
 
-
+    // Validate password match
     if (password !== confirmPassword) {
         throw new Error('Passwords do not match');
     }
 
-
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-
+    // Insert the user into the database
     const result = await pool.query(
         `INSERT INTO users (first_name, last_name, dob, gender, phone_number, email, reference_id, password)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, created_at`,
