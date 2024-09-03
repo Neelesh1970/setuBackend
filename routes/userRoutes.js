@@ -1,6 +1,7 @@
 const express = require('express');
 const userController = require('../controllers/userController');
 const auth = require('../middlewares/auth');
+const upload = require('../middlewares/upload');
 
 const router = express.Router();
 
@@ -8,9 +9,12 @@ router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.get('/user', userController.getAllUsers);  
 router.get('/user/:id', userController.getUserById);
-router.put('/update/:id', userController.updateUser);
-router.post('/addfamily/:userId/family', userController.addFamilyMember);
+router.put('/update/:id', upload.single('profile_photo'), userController.updateUser);
+router.post('/addFamilyMember/:userId', upload.single('profile_photo'), userController.addFamilyMember);
 router.put('/update/:userId/family/:familyId', userController.updateFamilyMember);
+router.delete('/delete/:id', userController.deleteUser);
+router.delete('/deleteFamily/:id', userController.deleteFamilyMember);
+
 
 
 // Example of a protected route

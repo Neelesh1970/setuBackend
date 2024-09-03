@@ -3,8 +3,12 @@ const jwt = require('jsonwebtoken');
 const userModel = require('../models/userModel');
 const pool = require('../config/db');
 
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
+
 exports.registerUser = async (userData) => {
-    const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword } = userData;
+    const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword, isActive } = userData;
 
     
     let missingFields = [];
@@ -32,9 +36,9 @@ exports.registerUser = async (userData) => {
 
     
     const result = await pool.query(
-        `INSERT INTO users (first_name, last_name, dob, gender, phone_number, email, reference_id, password)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, created_at`,
-        [firstName, lastName, dob, gender, phoneNumber, email, referenceId, hashedPassword]
+        `INSERT INTO users (first_name, last_name, dob, gender, phone_number, email, reference_id, password, isActive )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, isActive, created_at`,
+        [firstName, lastName, dob, gender, phoneNumber, email, referenceId, hashedPassword, isActive || true]
     );
 
     return result.rows[0];
@@ -64,7 +68,7 @@ exports.loginUser = async (loginData) => {
 };
 
 exports.getAllUsers = async () => {
-    const users = await pool.query('SELECT id, first_name, last_name, dob, gender, phone_number, email, reference_id, created_at, updated_at FROM users');
+    const users = await pool.query('SELECT id, first_name, last_name, dob, gender, phone_number, email, reference_id, profile_photo, isActive, created_at, updated_at FROM users');
     return users.rows;
 };
 
@@ -74,7 +78,7 @@ exports.getUserById = async (id) => {
         throw new Error('Please provide a user ID');
     }
 
-    const user = await pool.query('SELECT id, first_name, last_name, dob, gender, phone_number, email, reference_id, created_at, updated_at FROM users WHERE id = $1', [id]);
+    const user = await pool.query('SELECT id, first_name, last_name, dob, gender, phone_number, email, reference_id, isActive, created_at, updated_at FROM users WHERE id = $1', [id]);
 
     if (user.rows.length === 0) {
         throw new Error('User not found');
@@ -83,12 +87,21 @@ exports.getUserById = async (id) => {
     return user.rows[0];
 };
 
+exports.deleteUser = async (id) => {
+
+    const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
+
+    if (result.rows.length === 0) {
+        throw new Error('User not found');
+    }
+
+    return { message: `User with ID ${id} has been deleted` };
+};
 
 
-exports.updateUser = async (id, userData) => {
+exports.updateUser = async (id, userData, file) => {
     const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword } = userData;
 
-   
     let fields = [];
     let values = [];
     let index = 1;
@@ -100,7 +113,7 @@ exports.updateUser = async (id, userData) => {
     if (phoneNumber) { fields.push(`phone_number = $${index++}`); values.push(phoneNumber); }
     if (email) { fields.push(`email = $${index++}`); values.push(email); }
     if (referenceId) { fields.push(`reference_id = $${index++}`); values.push(referenceId); }
-    
+
     if (password) {
         if (password !== confirmPassword) {
             throw new Error('Passwords do not match');
@@ -110,19 +123,23 @@ exports.updateUser = async (id, userData) => {
         values.push(hashedPassword);
     }
 
+    if (file) {
+        const filePath = path.join('uploads', file.filename);
+        fields.push(`profile_photo = $${index++}`);
+        values.push(filePath);
+    }
+
     if (fields.length === 0) {
         throw new Error('No fields provided for update');
     }
 
-   
     values.push(id);
 
-    
     const query = `
         UPDATE users
         SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
         WHERE id = $${index}
-        RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, created_at, updated_at;
+        RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, created_at, updated_at, profile_photo;
     `;
 
     const result = await pool.query(query, values);
@@ -135,24 +152,36 @@ exports.updateUser = async (id, userData) => {
 };
 
 
-exports.addFamilyMember = async (userId, familyData) => {
+
+exports.addFamilyMember = async (userId, familyData, file) => {
     const { firstName, lastName, relation, dob, gender, bloodGroup, height, weight } = familyData;
 
-    
     if (!firstName) throw new Error('First Name is required');
     if (!lastName) throw new Error('Last Name is required');
     if (!relation) throw new Error('Relation is required');
     if (!dob) throw new Error('Date of Birth is required');
     if (!gender) throw new Error('Gender is required');
 
-    
+    const filePath = file ? path.join('uploads', file.filename) : null;
+
     const result = await pool.query(
-        `INSERT INTO family_members (user_id, first_name, last_name, relation, dob, gender, blood_group, height, weight)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, first_name, last_name, relation, dob, gender, blood_group, height, weight, created_at`,
-        [userId, firstName, lastName, relation, dob, gender, bloodGroup, height, weight]
+        `INSERT INTO family_members (user_id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive, created_at`,
+        [userId, firstName, lastName, relation, dob, gender, bloodGroup, height, weight, filePath, true]
     );
 
     return result.rows[0];
+};
+
+exports.deleteFamilyMember = async (id) => {
+    
+    const result = await pool.query('DELETE FROM family_members WHERE id = $1 RETURNING id', [id]);
+
+    if (result.rows.length === 0) {
+        throw new Error('Family member not found');
+    }
+
+    return { message: `Family member with ID ${id} has been deleted` };
 };
 
 

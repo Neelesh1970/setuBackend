@@ -37,11 +37,21 @@ exports.getUserById = async (req, res) => {
     }
 };
 
+exports.deleteUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const response = await userService.deleteUser(userId);
+        res.status(200).json(response);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
 
 exports.updateUser = async (req, res) => {
     try {
-        const userId = req.params.id; 
-        const updatedUser = await userService.updateUser(userId, req.body);
+        const userId = req.params.id;
+        const updatedUser = await userService.updateUser(userId, req.body, req.file);
         res.status(200).json(updatedUser);
     } catch (err) {
         res.status(400).json({ error: err.message });
@@ -51,9 +61,19 @@ exports.updateUser = async (req, res) => {
 
 exports.addFamilyMember = async (req, res) => {
     try {
-        const userId = req.params.userId;
-        const familyMember = await userService.addFamilyMember(userId, req.body);
-        res.status(201).json(familyMember);
+        const userId = req.params.userId; 
+        const newFamilyMember = await userService.addFamilyMember(userId, req.body, req.file);
+        res.status(201).json(newFamilyMember);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.deleteFamilyMember = async (req, res) => {
+    try {
+        const familyMemberId = req.params.id;
+        const response = await familyMemberService.deleteFamilyMember(familyMemberId);
+        res.status(200).json(response);
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
