@@ -10,10 +10,7 @@ router.post('/login', userController.login);
 router.get('/user', userController.getAllUsers);  
 router.get('/user/:id', userController.getUserById);
 router.put('/update/:id', upload.single('profile_photo'), userController.updateUser);
-router.post('/addFamilyMember/:userId', upload.single('profile_photo'), userController.addFamilyMember);
-router.put('/update/:userId/family/:familyId', userController.updateFamilyMember);
 router.delete('/delete/:id', userController.deleteUser);
-router.delete('/deleteFamily/:id', userController.deleteFamilyMember);
 
 
 

@@ -58,34 +58,3 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-
-exports.addFamilyMember = async (req, res) => {
-    try {
-        const userId = req.params.userId; 
-        const newFamilyMember = await userService.addFamilyMember(userId, req.body, req.file);
-        res.status(201).json(newFamilyMember);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-};
-
-exports.deleteFamilyMember = async (req, res) => {
-    try {
-        const familyMemberId = req.params.id;
-        const response = await familyMemberService.deleteFamilyMember(familyMemberId);
-        res.status(200).json(response);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-};
-
-
-exports.updateFamilyMember = async (req, res) => {
-    try {
-        const familyId = req.params.familyId;
-        const updatedFamilyMember = await userService.updateFamilyMember(familyId, req.body);
-        res.status(200).json(updatedFamilyMember);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-};
