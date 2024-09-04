@@ -8,7 +8,7 @@ const path = require('path');
 const multer = require('multer');
 
 exports.registerUser = async (userData) => {
-    const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword, isActive } = userData;
+    const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword, isActive, isDeleted } = userData;
 
     
     let missingFields = [];
@@ -36,36 +36,47 @@ exports.registerUser = async (userData) => {
 
     
     const result = await pool.query(
-        `INSERT INTO users (first_name, last_name, dob, gender, phone_number, email, reference_id, password, isActive )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, isActive, created_at`,
-        [firstName, lastName, dob, gender, phoneNumber, email, referenceId, hashedPassword, isActive || true]
+        `INSERT INTO users (first_name, last_name, dob, gender, phone_number, email, reference_id, password, isActive, isDeleted )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, isActive, isDeleted, created_at`,
+        [firstName, lastName, dob, gender, phoneNumber, email, referenceId, hashedPassword, isActive || true, isDeleted || false]
     );
 
     return result.rows[0];
 };
 
 exports.loginUser = async (loginData) => {
-    const { email, password } = loginData;
+    const { email, phoneNumber, password } = loginData;
 
-    if (!email || !password) {
-        throw new Error('Please provide both email and password');
+    if ((!email && !phoneNumber) || !password) {
+        throw new Error('Please provide either an email or phone number and password');
     }
 
-    const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    let userQuery = '';
+    let userParams = [];
+
+    if (email) {
+        userQuery = 'SELECT * FROM users WHERE email = $1';
+        userParams = [email];
+    } else if (phoneNumber) {
+        userQuery = 'SELECT * FROM users WHERE phone_number = $1';
+        userParams = [phoneNumber];
+    }
+
+    const user = await pool.query(userQuery, userParams);
 
     if (user.rows.length === 0) {
-        throw new Error('Invalid email or password');
+        throw new Error('Invalid email/phone number or password');
     }
 
     const validPassword = await bcrypt.compare(password, user.rows[0].password);
 
     if (!validPassword) {
-        throw new Error('Invalid email or password');
+        throw new Error('Invalid email/phone number or password');
     }
 
-   
     return { message: 'Login successful' };
 };
+
 
 exports.getAllUsers = async () => {
     const users = await pool.query('SELECT id, first_name, last_name, dob, gender, phone_number, email, reference_id, profile_photo, isActive, created_at, updated_at FROM users');

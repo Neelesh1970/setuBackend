@@ -20,8 +20,8 @@ exports.addFamilyMember = async (userId, familyData, file) => {
     const filePath = file ? path.join('uploads', file.filename) : null;
 
     const result = await pool.query(
-        `INSERT INTO family_members (user_id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive, created_at`,
+        `INSERT INTO family_members (user_id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive, isDeleted)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive, isDeleted, created_at`,
         [userId, firstName, lastName, relation, dob, gender, bloodGroup, height, weight, filePath, true]
     );
 
