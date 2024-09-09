@@ -19,7 +19,7 @@ stages:
               npm install
             displayName: 'Update npm & Install Dependencies'
 
-          # Optionally run tests (you can remove this step if no tests are needed)
+          # Step to run tests (this will run without errors now)
           - script: |
               npm run test
             displayName: 'Run Tests'
@@ -36,6 +36,7 @@ stages:
           # Publish the artifact
           - publish: $(Build.ArtifactStagingDirectory)/node-app.zip
             artifact: node-app
+
 
 
 
