@@ -19,7 +19,7 @@ stages:
               npm install
             displayName: 'Update npm & Install Dependencies'
 
-          # Run tests
+          # Optionally run tests (you can remove this step if no tests are needed)
           - script: |
               npm run test
             displayName: 'Run Tests'
