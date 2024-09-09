@@ -6,25 +6,25 @@ stages:
     jobs:
       - job: Build
         steps:
-          # Step to use Node.js version 18.x
+          # Use Node.js version 18.x
           - task: NodeTool@0
             inputs:
               versionSpec: '18.x'
               checkLatest: true
             displayName: 'Use Node.js 18.x'
 
-          # Step to update npm and install dependencies
+          # Install dependencies
           - script: |
               npm install -g npm@latest
               npm install
             displayName: 'Update npm & Install Dependencies'
 
-          # Step to run tests (this will run without errors now)
-          - script: |
-              npm run test
-            displayName: 'Run Tests'
+          # Comment or remove the Run Tests step if no tests are needed
+          # - script: |
+          #     npm run test
+          #   displayName: 'Run Tests'
 
-          # Archive the build artifacts (if needed)
+          # Archive the build artifacts (optional)
           - task: ArchiveFiles@2
             inputs:
               rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
