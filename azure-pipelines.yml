@@ -17,15 +17,14 @@ stages:
           - script: |
               npm install -g npm@latest
               npm install
-              npm run build
-            displayName: 'Update npm, Install Dependencies & Build'
-          
+            displayName: 'Update npm & Install Dependencies'
+
           # Run tests
           - script: |
               npm run test
             displayName: 'Run Tests'
 
-          # Archive the build artifacts
+          # Archive the build artifacts (if needed)
           - task: ArchiveFiles@2
             inputs:
               rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
