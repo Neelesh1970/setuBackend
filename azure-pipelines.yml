@@ -10,12 +10,13 @@ stages:
             inputs:
               versionSpec: '14.x'
               checkLatest: true
-
+          
           - script: |
+              npm install -g npm@latest
               npm install
               npm run build
-            displayName: 'Install Dependencies & Build'
-
+            displayName: 'Update npm, Install Dependencies & Build'
+          
           - script: |
               npm run test
             displayName: 'Run Tests'
@@ -30,4 +31,5 @@ stages:
 
           - publish: $(Build.ArtifactStagingDirectory)/node-app.zip
             artifact: node-app
+
 
