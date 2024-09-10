@@ -1,0 +1,42 @@
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Build
+        steps:
+          # Use Node.js version 18.x
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '18.x'
+              checkLatest: true
+            displayName: 'Use Node.js 18.x'
+
+          # Install dependencies
+          - script: |
+              npm install -g npm@latest
+              npm install
+            displayName: 'Update npm & Install Dependencies'
+
+          # Comment or remove the Run Tests step if no tests are needed
+          # - script: |
+          #     npm run test
+          #   displayName: 'Run Tests'
+
+          # Archive the build artifacts (optional)
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/node-app.zip'
+              replaceExistingArchive: true
+
+          # Publish the artifact
+          - publish: $(Build.ArtifactStagingDirectory)/node-app.zip
+            artifact: node-app
+
+
+
+
