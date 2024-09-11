@@ -8,7 +8,7 @@ const path = require('path');
 const multer = require('multer');
 
 exports.registerUser = async (userData) => {
-    const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword, isActive, isDeleted } = userData;
+    const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword, username, isActive, isDeleted } = userData;
 
     
     let missingFields = [];
@@ -21,6 +21,7 @@ exports.registerUser = async (userData) => {
     if (!email) missingFields.push('Email');
     if (!password) missingFields.push('Password');
     if (!confirmPassword) missingFields.push('Confirm Password');
+    if (!username) missingFields.push('Username'); 
 
     if (missingFields.length > 0) {
         throw new Error(`This field is required: ${missingFields.join(', ')}`);
@@ -36,10 +37,11 @@ exports.registerUser = async (userData) => {
 
     
     const result = await pool.query(
-        `INSERT INTO users (first_name, last_name, dob, gender, phone_number, email, reference_id, password, isActive, isDeleted )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, isActive, isDeleted, created_at`,
-        [firstName, lastName, dob, gender, phoneNumber, email, referenceId, hashedPassword, isActive || true, isDeleted || false]
-    );
+        `INSERT INTO users (first_name, last_name, dob, gender, phone_number, email, reference_id, password, username, isActive, isDeleted)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+         RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, username, isActive, isDeleted, created_at`,
+        [firstName, lastName, dob, gender, phoneNumber, email, referenceId, hashedPassword, username, isActive || true, isDeleted || false]
+    );  
 
     return result.rows[0];
 };
@@ -112,14 +114,20 @@ exports.deleteUser = async (id) => {
 
 
 exports.updateUser = async (id, userData, file) => {
-    const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword, bloodGroup, height, weight, emergencyContact } = userData;
+    const {
+        firstName, lastName, username, dob, gender, phoneNumber, email, referenceId, password, confirmPassword,
+        bloodGroup, height, weight, emergencyContact
+    } = userData;
 
+    
     let fields = [];
     let values = [];
     let index = 1;
 
+    
     if (firstName) { fields.push(`first_name = $${index++}`); values.push(firstName); }
     if (lastName) { fields.push(`last_name = $${index++}`); values.push(lastName); }
+    if (username) { fields.push(`username = $${index++}`); values.push(username); } 
     if (dob) { fields.push(`dob = $${index++}`); values.push(dob); }
     if (gender) { fields.push(`gender = $${index++}`); values.push(gender); }
     if (phoneNumber) { fields.push(`phone_number = $${index++}`); values.push(phoneNumber); }
@@ -130,6 +138,7 @@ exports.updateUser = async (id, userData, file) => {
     if (weight) { fields.push(`weight = $${index++}`); values.push(weight); }
     if (emergencyContact) { fields.push(`emergency_contact = $${index++}`); values.push(emergencyContact); }
 
+    
     if (password) {
         if (password !== confirmPassword) {
             throw new Error('Passwords do not match');
@@ -139,32 +148,43 @@ exports.updateUser = async (id, userData, file) => {
         values.push(hashedPassword);
     }
 
+    
     if (file) {
         const filePath = path.join('uploads', file.filename);
         fields.push(`profile_photo = $${index++}`);
         values.push(filePath);
     }
 
+    
     if (fields.length === 0) {
         throw new Error('No fields provided for update');
     }
 
+    
     values.push(id);
 
+    
     const query = `
         UPDATE users
         SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
         WHERE id = $${index}
-        RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, blood_group, height, weight, emergency_contact, created_at, updated_at, profile_photo;
+        RETURNING id, first_name, last_name, username, dob, gender, phone_number, email, reference_id, blood_group, height, weight, emergency_contact, created_at, updated_at, profile_photo;
     `;
 
-    const result = await pool.query(query, values);
+    try {
+        
+        const result = await pool.query(query, values);
 
-    if (result.rows.length === 0) {
-        throw new Error('User not found');
+        
+        if (result.rows.length === 0) {
+            throw new Error('User not found');
+        }
+
+        
+        return result.rows[0];
+    } catch (error) {
+        throw new Error(`Error updating user: ${error.message}`);
     }
-
-    return result.rows[0];
 };
 
 
