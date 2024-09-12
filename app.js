@@ -3,6 +3,7 @@ const userRoutes = require('./routes/userRoutes');
 const userFamilyRoutes = require('./routes/userFamilyRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const userJobProfileRoutes = require('./routes/userJobProfileRoutes')
+const doctorRoutes = require('./routes/doctorRoutes');
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/addfamily', userFamilyRoutes);
 app.use('/api', ticketRoutes);
 app.use('/api/job', userJobProfileRoutes);
+app.use('/api/doctor', doctorRoutes);
 
 
 const PORT = process.env.PORT || 5000;
