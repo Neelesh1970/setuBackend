@@ -6,6 +6,7 @@ const userJobProfileRoutes = require('./routes/userJobProfileRoutes')
 const doctorRoutes = require('./routes/doctorRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const jobs = require('./routes/jobRoutes');
+const fitness = require('./routes/fitnessRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api/job', userJobProfileRoutes);
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/jobs', jobs);
+app.use('/api/fitness', fitness);
 
 
 const PORT = process.env.PORT || 5000;
