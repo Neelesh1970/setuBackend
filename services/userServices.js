@@ -8,11 +8,14 @@ const path = require('path');
 const multer = require('multer');
 
 exports.registerUser = async (userData) => {
-    const { firstName, lastName, dob, gender, phoneNumber, email, referenceId, password, confirmPassword, username, isActive, isDeleted } = userData;
+    const {
+        firstName, lastName, dob, gender, phoneNumber, email, referenceId,
+        password, confirmPassword, username, isActive, isDeleted
+    } = userData;
 
-    
     let missingFields = [];
-    
+
+   
     if (!firstName) missingFields.push('First Name');
     if (!lastName) missingFields.push('Last Name');
     if (!dob) missingFields.push('Date of Birth');
@@ -21,10 +24,10 @@ exports.registerUser = async (userData) => {
     if (!email) missingFields.push('Email');
     if (!password) missingFields.push('Password');
     if (!confirmPassword) missingFields.push('Confirm Password');
-    if (!username) missingFields.push('Username'); 
+    if (!username) missingFields.push('Username');
 
     if (missingFields.length > 0) {
-        throw new Error(`This field is required: ${missingFields.join(', ')}`);
+        throw new Error(`These fields are required: ${missingFields.join(', ')}`);
     }
 
     
@@ -40,11 +43,15 @@ exports.registerUser = async (userData) => {
         `INSERT INTO users (first_name, last_name, dob, gender, phone_number, email, reference_id, password, username, isActive, isDeleted)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
          RETURNING id, first_name, last_name, dob, gender, phone_number, email, reference_id, username, isActive, isDeleted, created_at`,
-        [firstName, lastName, dob, gender, phoneNumber, email, referenceId, hashedPassword, username, isActive || true, isDeleted || false]
-    );  
+        [
+            firstName, lastName, dob, gender, phoneNumber, email, referenceId, 
+            hashedPassword, username, isActive || true, isDeleted || false
+        ]
+    );
 
     return result.rows[0];
 };
+
 
 exports.loginUser = async (loginData) => {
     const { email, phoneNumber, password } = loginData;
@@ -56,6 +63,7 @@ exports.loginUser = async (loginData) => {
     let userQuery = '';
     let userParams = [];
 
+    
     if (email) {
         userQuery = 'SELECT * FROM users WHERE email = $1';
         userParams = [email];
@@ -70,13 +78,33 @@ exports.loginUser = async (loginData) => {
         throw new Error('Invalid email/phone number or password');
     }
 
-    const validPassword = await bcrypt.compare(password, user.rows[0].password);
+    const userRecord = user.rows[0];
+
+    
+    if (userRecord.isdeleted) {
+        
+        await pool.query('UPDATE users SET isDeleted = false WHERE id = $1', [userRecord.id]);
+    }
+
+   
+    const validPassword = await bcrypt.compare(password, userRecord.password);
 
     if (!validPassword) {
         throw new Error('Invalid email/phone number or password');
     }
 
-    return { message: 'Login successful' };
+   
+    return {
+        message: 'Login successful',
+        
+        token: jwt.sign({ id: userRecord.id, username: userRecord.username }, 'your_jwt_secret', { expiresIn: '1h' })
+    };
+};
+
+
+exports.signOutUser = async (userId) => {
+    await pool.query('UPDATE users SET isDeleted = true WHERE id = $1', [userId]);
+    return { message: 'User signed out successfully' };
 };
 
 

@@ -12,6 +12,8 @@ router.get('/user/:id', userController.getUserById);
 router.put('/update/:id', upload.single('profile_photo'), userController.updateUser);
 router.delete('/delete/:id', userController.deleteUser);
 
+router.post('/signout', auth.authenticateToken, userController.signOut);
+
 
 
 // Example of a protected route

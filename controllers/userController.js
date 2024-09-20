@@ -19,6 +19,16 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.signOut = async (req, res) => {
+    try {
+        const userId = req.user.id; 
+        const result = await userService.signOutUser(userId);
+        res.status(200).json(result);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
 exports.getAllUsers = async (req, res) => {
     try {
         const users = await userService.getAllUsers();
