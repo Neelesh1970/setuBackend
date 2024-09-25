@@ -11,22 +11,35 @@ const multer = require('multer');
 exports.addFamilyMember = async (userId, familyData, file) => {
     const { firstName, lastName, relation, dob, gender, bloodGroup, height, weight } = familyData;
 
+    // Validate family member data
     if (!firstName) throw new Error('First Name is required');
     if (!lastName) throw new Error('Last Name is required');
     if (!relation) throw new Error('Relation is required');
     if (!dob) throw new Error('Date of Birth is required');
     if (!gender) throw new Error('Gender is required');
 
+    // Check if the user exists
+    const userCheck = await pool.query(
+        `SELECT id FROM users WHERE id = $1`,
+        [userId]
+    );
+
+    if (userCheck.rowCount === 0) {
+        throw new Error('User does not exist');
+    }
+
     const filePath = file ? path.join('uploads', file.filename) : null;
 
+    // Insert family member
     const result = await pool.query(
         `INSERT INTO family_members (user_id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive, isDeleted)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive, isDeleted, created_at`,
-        [userId, firstName, lastName, relation, dob, gender, bloodGroup, height, weight, filePath, true]
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, first_name, last_name, relation, dob, gender, blood_group, height, weight, profile_photo, isActive, isDeleted, created_at`,
+        [userId, firstName, lastName, relation, dob, gender, bloodGroup, height, weight, filePath, true, false]
     );
 
     return result.rows[0];
 };
+
 
 exports.getFamilyDetails = async (userId) => {
     const result = await pool.query(
