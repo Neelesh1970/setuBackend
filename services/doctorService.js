@@ -53,6 +53,43 @@ exports.registerDoctor = async (doctorData, file) => {
     return result.rows[0];
 };
 
+exports.getAllDoctors = async () => {
+    const query = `SELECT * FROM doctor_register`;
+    const result = await pool.query(query);
+    return result.rows;
+};
+
+exports.getDoctorById = async (doctorId) => {
+    const query = `SELECT * FROM doctor_register WHERE id = $1`;
+    const result = await pool.query(query, [doctorId]);
+    if (result.rows.length === 0) {
+        throw new Error('Doctor not found');
+    }
+    return result.rows[0];
+};
+
+
+exports.updateDoctor = async (doctorId, doctorData) => {
+    const { firstName, lastName, email, phoneNumber, regNo, clinicName, clinicAddress, qualificationSpecialization, servicesOffered } = doctorData;
+
+    const query = `
+        UPDATE doctor_register
+        SET first_name = $1, last_name = $2, email_id = $3, phone_number = $4, reg_no = $5, 
+            clinic_name = $6, clinic_address = $7, specialization = $8, services_offered = $9
+        WHERE id = $10
+    `;
+
+    const values = [
+        firstName, lastName, email, phoneNumber, regNo, 
+        clinicName, clinicAddress, qualificationSpecialization, servicesOffered, doctorId
+    ];
+
+    const result = await pool.query(query, values);
+    return result.rowCount; 
+};
+
+
+
 
 exports.updateDoctorStatus = async (doctorId, isActive) => {
     const query = `
@@ -62,4 +99,11 @@ exports.updateDoctorStatus = async (doctorId, isActive) => {
     `;
     const values = [isActive, doctorId];
     await pool.query(query, values);
+};
+
+
+exports.deleteDoctor = async (doctorId) => {
+    const query = `DELETE FROM doctor_register WHERE id = $1`;
+    const result = await pool.query(query, [doctorId]);
+    return result.rowCount; 
 };
