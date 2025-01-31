@@ -2,10 +2,10 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
     user: 'postgres',
-    host: 'localhost',
+    host: 'esetudb.c744kok0y79g.ap-south-1.rds.amazonaws.com',
     database: 'esetubackend',
-    password: 'root',
-    port: 5434,
+    password: 'postgres123',
+    port: 5432,
 });
 
 pool.on('connect', () => {
