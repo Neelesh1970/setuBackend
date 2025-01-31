@@ -20,4 +20,6 @@ router.post('/delete-contact4/:id', (req, res) => contactController.deleteContac
 
 router.get('/emergency-contacts/:id', contactController.getEmergencyContacts);
 
+
+
 module.exports = router;
